@@ -28,7 +28,7 @@
                 displayEventTime: false, // Hides confusing midnight timestamps
                 events: function(info, successCallback, failureCallback) {
                     // Fetch your raw Lodgify iCal data via a proxy to avoid CORS blocks
-                    var lodgifyIcalUrl = 'https://www.lodgify.com/35689b4e-016b-4ed7-8c67-cec74e5f1dd6.ics';
+                    var lodgifyIcalUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://www.lodgify.com/35689b4e-016b-4ed7-8c67-cec74e5f1dd6.ics');
                     
                     fetch(lodgifyIcalUrl)
                         .then(response => response.text())
