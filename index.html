@@ -6,14 +6,14 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.min.js"></script>
     
-            <style>
+                <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
         #calendar { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
         .fc-event { 
             cursor: pointer; 
-            padding: 6px 10px; 
-            font-size: 0.95em; 
+            padding: 4px 2px; 
+            font-size: 0.9em; 
             font-weight: bold; 
             border-radius: 6px !important; 
             border: none;
@@ -21,11 +21,6 @@
 
         .fc-daygrid-event-h-harness {
             border-radius: 6px !important;
-        }
-
-        /* Allows the gradient background to override default FullCalendar colors */
-        .gradient-event {
-            background-size: cover;
         }
     </style>
 
@@ -36,7 +31,7 @@
     <h2 style="text-align: center; color: #333;">Property Turnover Schedule</h2>
     <div id='calendar'></div>
 
-        <script>
+            <script>
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
 
@@ -44,7 +39,6 @@
                 initialView: 'dayGridMonth',
                 displayEventTime: false, 
                 events: function(info, successCallback, failureCallback) {
-                    // Put your actual Lodgify URL here inside the single quotes:
                     var rawUrl = 'https://www.lodgify.com/35689b4e-016b-4ed7-8c67-cec74e5f1dd6.ics'; 
                     var lodgifyIcalUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
                     
@@ -58,25 +52,28 @@
                             var events = vevents.map(vevent => {
                                 var event = new ICAL.Event(vevent);
                                 
+                                // Store the exact string dates for strict matching later
+                                var startStr = event.startDate.toISODateString();
+                                var endStr = event.endDate.toISODateString();
+                                
                                 var startDate = event.startDate.toJSDate();
                                 var endDate = event.endDate.toJSDate();
                                 
-                                // Keep our visual correction so it fills the checkout day box
+                                // Keep our visual correction so the bar spans fully through checkout day
                                 var visualEndDate = new Date(endDate);
                                 visualEndDate.setDate(visualEndDate.getDate() + 1);
                                 
                                 return {
-                                    title: '🧹 TURNOVER REQUIRED',
                                     start: startDate,
                                     end: visualEndDate, 
-                                    
-                                    // CHANGE THIS TO CUSTOMIZE COLORS:
-                                    // This creates a gradient block: Green on the start day, sharp split to Red for the checkout days.
-                                    backgroundImage: 'linear-gradient(to right, #2ecc71 0%, #2ecc71 20%, #e74c3c 20%, #e74c3c 100%)',
-                                    
+                                    backgroundColor: '#34495e', // Neutral dark slate blue for continuous stay days
+                                    borderColor: '#2c3e50',
                                     textColor: '#ffffff',
-                                    // We use classNames to pass the gradient style via CSS smoothly
-                                    classNames: ['gradient-event']
+                                    // Pass the true dates along as extra data for our custom renderer
+                                    extendedProps: {
+                                        trueStartStr: startStr,
+                                        trueEndStr: endStr
+                                    }
                                 };
                             });
                             
@@ -87,17 +84,62 @@
                             failureCallback(error);
                         });
                 },
-                // This forces FullCalendar to apply our custom background image gradient
-                eventDidMount: function(info) {
-                    if (info.event.extendedProps.backgroundImage) {
-                        info.el.style.backgroundImage = info.event.extendedProps.backgroundImage;
+                
+                // NEW CUSTOM RENDERER: Injects conditional badges onto specific days
+                eventContent: function(arg) {
+                    // Format the current grid cell date back to YYYY-MM-DD string format
+                    var cellDateStr = arg.event.start.toISOString().split('T')[0];
+                    
+                    // Fetch the true dates we hid inside the event props
+                    var trueStart = arg.event.extendedProps.trueStartStr;
+                    var trueEnd = arg.event.extendedProps.trueEndStr;
+                    
+                    // Create a container to hold our dynamic text/badges
+                    var container = document.createElement('div');
+                    container.style.display = 'flex';
+                    container.style.justifyContent = 'space-between';
+                    container.style.alignItems = 'center';
+                    container.style.width = '100%';
+                    
+                    var labelText = document.createElement('span');
+                    labelText.innerText = ' RES.'; // Default text for middle days
+                    labelText.style.marginLeft = '4px';
+                    container.appendChild(labelText);
+
+                    // 1. If this specific square is the actual arrival day
+                    if (cellDateStr === trueStart) {
+                        var inBadge = document.createElement('span');
+                        inBadge.innerText = '🛫 ARRIVAL';
+                        inBadge.style.backgroundColor = '#2ecc71'; // Green
+                        inBadge.style.padding = '2px 6px';
+                        inBadge.style.borderRadius = '4px';
+                        inBadge.style.fontSize = '0.8em';
+                        inBadge.style.marginRight = '4px';
+                        labelText.innerText = ''; // Clear default text
+                        container.appendChild(inBadge);
+                    } 
+                    
+                    // 2. If this specific square is the actual turnover/checkout day
+                    if (cellDateStr === trueEnd) {
+                        var outBadge = document.createElement('span');
+                        outBadge.innerText = '🧹 CLEAN';
+                        outBadge.style.backgroundColor = '#e74c3c'; // Red
+                        outBadge.style.padding = '2px 6px';
+                        outBadge.style.borderRadius = '4px';
+                        outBadge.style.fontSize = '0.8em';
+                        outBadge.style.marginRight = '4px';
+                        labelText.innerText = ''; // Clear default text
+                        container.appendChild(outBadge);
                     }
+
+                    return { domNodes: [container] };
                 }
             });
 
             calendar.render();
         });
     </script>
+
 
 </body>
 </html>
