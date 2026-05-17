@@ -6,25 +6,29 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.min.js"></script>
     
-        <style>
+            <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
         #calendar { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
-        /* UPDATED STYLES FOR ROUNDED CORNERS */
         .fc-event { 
             cursor: pointer; 
             padding: 6px 10px; 
             font-size: 0.95em; 
             font-weight: bold; 
-            border-radius: 6px !important; /* This is the main control for rounding */
-            border: none; /* Often looks cleaner without the border when rounding */
+            border-radius: 6px !important; 
+            border: none;
         }
 
-        /* This specifically ensures the rounded corner appears at the *start* of the bar */
         .fc-daygrid-event-h-harness {
             border-radius: 6px !important;
         }
+
+        /* Allows the gradient background to override default FullCalendar colors */
+        .gradient-event {
+            background-size: cover;
+        }
     </style>
+
 
 </head>
 <body>
@@ -32,7 +36,7 @@
     <h2 style="text-align: center; color: #333;">Property Turnover Schedule</h2>
     <div id='calendar'></div>
 
-    <script>
+        <script>
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
 
@@ -54,22 +58,25 @@
                             var events = vevents.map(vevent => {
                                 var event = new ICAL.Event(vevent);
                                 
-                                // Get the native javascript dates
                                 var startDate = event.startDate.toJSDate();
                                 var endDate = event.endDate.toJSDate();
                                 
-                                // FIX: Manually push the visual calendar end-date forward by 1 day
-                                // This forces the bar to completely fill the checkout day grid box.
+                                // Keep our visual correction so it fills the checkout day box
                                 var visualEndDate = new Date(endDate);
                                 visualEndDate.setDate(visualEndDate.getDate() + 1);
                                 
                                 return {
-                                    title: '',
+                                    title: '🧹 TURNOVER REQUIRED',
                                     start: startDate,
                                     end: visualEndDate, 
-                                    backgroundColor: '#e000080', // Navy Blue for high visibility
-                                    borderColor: '#c0392b',
-                                    textColor: '#ffffff'
+                                    
+                                    // CHANGE THIS TO CUSTOMIZE COLORS:
+                                    // This creates a gradient block: Green on the start day, sharp split to Red for the checkout days.
+                                    backgroundImage: 'linear-gradient(to right, #2ecc71 0%, #2ecc71 20%, #e74c3c 20%, #e74c3c 100%)',
+                                    
+                                    textColor: '#ffffff',
+                                    // We use classNames to pass the gradient style via CSS smoothly
+                                    classNames: ['gradient-event']
                                 };
                             });
                             
@@ -79,11 +86,18 @@
                             console.error(error);
                             failureCallback(error);
                         });
+                },
+                // This forces FullCalendar to apply our custom background image gradient
+                eventDidMount: function(info) {
+                    if (info.event.extendedProps.backgroundImage) {
+                        info.el.style.backgroundImage = info.event.extendedProps.backgroundImage;
+                    }
                 }
             });
 
             calendar.render();
         });
     </script>
+
 </body>
 </html>
