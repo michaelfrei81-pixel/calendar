@@ -6,20 +6,20 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.min.js"></script>
     
-                <style>
+               <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
         #calendar { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
         /* 1. Base style for ALL booking bars */
         .fc-event { 
             cursor: pointer; 
-            padding: 6px 0px; /* Reset horizontal padding so text centers nicely */
+            padding: 6px 0px; 
             font-size: 0.85em; 
             font-weight: bold; 
             background-color: #34495e !important; /* Slate blue */
             border: none !important;
             color: #ffffff !important;
-            text-align: center; /* Centers the text inside the floating bar */
+            text-align: center;
             
             /* Middle/Cut rows remain flat and full-width */
             border-radius: 0px !important; 
@@ -27,21 +27,31 @@
             margin-bottom: 4px;
         }
 
-        /* 2. Push the START edge to the exact middle of the check-in day */
-        .fc-event-start {
+        /* 2. Push the START edge to the middle ONLY if it's the actual absolute start of the reservation */
+        .fc-event-start:not(.fc-event-not-start) {
             border-top-left-radius: 50px !important;
             border-bottom-left-radius: 50px !important;
             margin-left: 50% !important; 
         }
 
-        /* 3. Pull the END edge back to the exact middle of the checkout day */
-        .fc-event-end {
+        /* 3. Pull the END edge back to the middle ONLY if it's the actual absolute checkout day */
+        .fc-event-end:not(.fc-event-not-end) {
             border-top-right-radius: 50px !important;
             border-bottom-right-radius: 50px !important;
             margin-right: 50% !important; 
         }
 
-        /* CRITICAL: Allows the event bars to break outside standard cell restrictions */
+        /* 4. If a row breaks and a multi-week stay continues onto a new row (like Sunday the 17th), 
+           ensure it starts flat and full-width at the very edge of the Sunday box */
+        .fc-event-not-start {
+            margin-left: 0px !important;
+        }
+        
+        .fc-event-not-end {
+            margin-right: 0px !important;
+        }
+
+        /* Clean up internal wrapper constraints */
         .fc-daygrid-event-h-harness {
             border-radius: 0px !important;
             margin: 0 !important;
