@@ -52,10 +52,7 @@
                             var events = vevents.map(vevent => {
                                 var event = new ICAL.Event(vevent);
                                 
-                                // Store the exact string dates for strict matching later
-                                var startStr = event.startDate.toISODateString();
-                                var endStr = event.endDate.toISODateString();
-                                
+                                // Convert to pure local JS dates to avoid string formatting bugs
                                 var startDate = event.startDate.toJSDate();
                                 var endDate = event.endDate.toJSDate();
                                 
@@ -66,13 +63,13 @@
                                 return {
                                     start: startDate,
                                     end: visualEndDate, 
-                                    backgroundColor: '#34495e', // Neutral dark slate blue for continuous stay days
+                                    backgroundColor: '#34495e', // Slate grey/blue for standard reservation days
                                     borderColor: '#2c3e50',
                                     textColor: '#ffffff',
-                                    // Pass the true dates along as extra data for our custom renderer
+                                    // Store local date strings for robust matching in the renderer
                                     extendedProps: {
-                                        trueStartStr: startStr,
-                                        trueEndStr: endStr
+                                        trueMatchStart: startDate.toDateString(),
+                                        trueMatchEnd: endDate.toDateString()
                                     }
                                 };
                             });
@@ -85,50 +82,46 @@
                         });
                 },
                 
-                // NEW CUSTOM RENDERER: Injects conditional badges onto specific days
+                // FIXED RENDERER: Uses reliable native date strings for matching
                 eventContent: function(arg) {
-                    // Format the current grid cell date back to YYYY-MM-DD string format
-                    var cellDateStr = arg.event.start.toISOString().split('T')[0];
+                    var cellDateStr = arg.event.start.toDateString();
                     
-                    // Fetch the true dates we hid inside the event props
-                    var trueStart = arg.event.extendedProps.trueStartStr;
-                    var trueEnd = arg.event.extendedProps.trueEndStr;
+                    var trueStart = arg.event.extendedProps.trueMatchStart;
+                    var trueEnd = arg.event.extendedProps.trueMatchEnd;
                     
-                    // Create a container to hold our dynamic text/badges
                     var container = document.createElement('div');
                     container.style.display = 'flex';
                     container.style.justifyContent = 'space-between';
                     container.style.alignItems = 'center';
                     container.style.width = '100%';
+                    container.style.padding = '2px 4px';
                     
                     var labelText = document.createElement('span');
-                    labelText.innerText = ' RES.'; // Default text for middle days
-                    labelText.style.marginLeft = '4px';
+                    labelText.innerText = '🏨 OCCUPIED'; // Continuous stay label
+                    labelText.style.fontSize = '0.85em';
                     container.appendChild(labelText);
 
-                    // 1. If this specific square is the actual arrival day
+                    // 1. Precise Check-In/Arrival Match
                     if (cellDateStr === trueStart) {
                         var inBadge = document.createElement('span');
                         inBadge.innerText = '🛫 ARRIVAL';
-                        inBadge.style.backgroundColor = '#2ecc71'; // Green
+                        inBadge.style.backgroundColor = '#2ecc71'; // Vibrant Green
                         inBadge.style.padding = '2px 6px';
                         inBadge.style.borderRadius = '4px';
                         inBadge.style.fontSize = '0.8em';
-                        inBadge.style.marginRight = '4px';
-                        labelText.innerText = ''; // Clear default text
+                        labelText.innerText = ''; 
                         container.appendChild(inBadge);
                     } 
                     
-                    // 2. If this specific square is the actual turnover/checkout day
+                    // 2. Precise Check-Out/Turnover Match
                     if (cellDateStr === trueEnd) {
                         var outBadge = document.createElement('span');
                         outBadge.innerText = '🧹 CLEAN';
-                        outBadge.style.backgroundColor = '#e74c3c'; // Red
+                        outBadge.style.backgroundColor = '#e74c3c'; // Vibrant Red
                         outBadge.style.padding = '2px 6px';
                         outBadge.style.borderRadius = '4px';
                         outBadge.style.fontSize = '0.8em';
-                        outBadge.style.marginRight = '4px';
-                        labelText.innerText = ''; // Clear default text
+                        labelText.innerText = ''; 
                         container.appendChild(outBadge);
                     }
 
