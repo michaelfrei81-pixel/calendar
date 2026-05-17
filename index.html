@@ -10,17 +10,39 @@
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
         #calendar { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
+        /* 1. Base style for ALL booking bars (The Middle/Cut sections) */
         .fc-event { 
             cursor: pointer; 
-            padding: 4px 2px; 
-            font-size: 0.9em; 
+            padding: 6px 10px; 
+            font-size: 0.95em; 
             font-weight: bold; 
-            border-radius: 6px !important; 
-            border: none;
+            background-color: #34495e !important; /* Slate Blue for stay dates */
+            border: none !important;
+            color: #ffffff !important;
+            
+            /* Default to completely flat/straight edges for the "cut" sections */
+            border-radius: 0px !important; 
+            margin-top: 2px;
+            margin-bottom: 2px;
         }
 
+        /* 2. Style applied ONLY to the actual start day grid box */
+        .fc-event-start {
+            border-top-left-radius: 8px !important;
+            border-bottom-left-radius: 8px !important;
+            background-color: #2ecc71 !important; /* Green for arrival */
+        }
+
+        /* 3. Style applied ONLY to the actual checkout day grid box */
+        .fc-event-end {
+            border-top-right-radius: 8px !important;
+            border-bottom-right-radius: 8px !important;
+            background-color: #e74c3c !important; /* Red for turnover */
+        }
+
+        /* Clean up FullCalendar's internal wrapper constraints */
         .fc-daygrid-event-h-harness {
-            border-radius: 6px !important;
+            border-radius: 0px !important;
         }
     </style>
 
@@ -51,28 +73,17 @@
                             
                             var events = vevents.map(vevent => {
                                 var event = new ICAL.Event(vevent);
-                                
                                 var startDate = event.startDate.toJSDate();
                                 var endDate = event.endDate.toJSDate();
                                 
-                                // Visual stretch so it fills the checkout day box completely
+                                // Keep our visual correction so the bar completely fills the checkout day
                                 var visualEndDate = new Date(endDate);
                                 visualEndDate.setDate(visualEndDate.getDate() + 1);
                                 
-                                // Create strict UTC timestamp strings for 100% reliable matching
-                                var trueStartStr = startDate.toISOString().split('T')[0];
-                                var trueEndStr = endDate.toISOString().split('T')[0];
-                                
                                 return {
+                                    title: '',
                                     start: startDate,
-                                    end: visualEndDate, 
-                                    backgroundColor: '#34495e', 
-                                    borderColor: '#2c3e50',
-                                    textColor: '#ffffff',
-                                    extendedProps: {
-                                        trueStartStr: trueStartStr,
-                                        trueEndStr: trueEndStr
-                                    }
+                                    end: visualEndDate
                                 };
                             });
                             
@@ -82,69 +93,6 @@
                             console.error(error);
                             failureCallback(error);
                         });
-                },
-                
-                // BULLETPROOF RENDERER: Looks at the exact calendar grid cell date, ignoring row segments
-                eventContent: function(arg) {
-                    // FullCalendar stores the actual day of the current segment's view range here
-                    var segStart = arg.event.start;
-                    
-                    // If the event is split, arg.view.calendar will tell us the exact day being rendered 
-                    // via the element's closest day cell date attribute.
-                    var cellDateStr = "";
-                    try {
-                        var cellEl = arg.el.closest('.fc-daygrid-day');
-                        if (cellEl) {
-                            cellDateStr = cellEl.getAttribute('data-date'); // Safely grabs "YYYY-MM-DD" from the grid square
-                        }
-                    } catch(e) {
-                        // Fallback to basic conversion if DOM isn't fully ready
-                        var localDate = new Date(segStart.getTime() - (segStart.getTimezoneOffset() * 60000));
-                        cellDateStr = localDate.toISOString().split('T')[0];
-                    }
-                    
-                    var trueStart = arg.event.extendedProps.trueStartStr;
-                    var trueEnd = arg.event.extendedProps.trueEndStr;
-                    
-                    var container = document.createElement('div');
-                    container.style.display = 'flex';
-                    container.style.justifyContent = 'space-between';
-                    container.style.alignItems = 'center';
-                    container.style.width = '100%';
-                    container.style.padding = '2px 4px';
-                    
-                    var labelText = document.createElement('span');
-                    labelText.style.fontSize = '0.85em';
-                    container.appendChild(labelText);
-
-                    // 1. Is this grid square EXACTLY the true arrival day?
-                    if (cellDateStr === trueStart) {
-                        var inBadge = document.createElement('span');
-                        inBadge.innerText = '🛫 ARRIVAL';
-                        inBadge.style.backgroundColor = '#2ecc71'; 
-                        inBadge.style.padding = '2px 6px';
-                        inBadge.style.borderRadius = '4px';
-                        inBadge.style.fontSize = '0.8em';
-                        labelText.innerText = ''; 
-                        container.appendChild(inBadge);
-                    } 
-                    // 2. Is this grid square EXACTLY the true checkout day?
-                    else if (cellDateStr === trueEnd) {
-                        var outBadge = document.createElement('span');
-                        outBadge.innerText = '🧹 CLEAN';
-                        outBadge.style.backgroundColor = '#e74c3c'; 
-                        outBadge.style.padding = '2px 6px';
-                        outBadge.style.borderRadius = '4px';
-                        outBadge.style.fontSize = '0.8em';
-                        labelText.innerText = ''; 
-                        container.appendChild(outBadge);
-                    }
-                    // 3. It's an middle day or a split row filler block
-                    else {
-                        labelText.innerText = '🏨 OCCUPIED';
-                    }
-
-                    return { domNodes: [container] };
                 }
             });
 
