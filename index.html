@@ -6,11 +6,26 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.min.js"></script>
     
-    <style>
+        <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
         #calendar { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .fc-event { cursor: pointer; padding: 6px 10px; font-size: 0.95em; font-weight: bold; border-radius: 4px; }
+        
+        /* UPDATED STYLES FOR ROUNDED CORNERS */
+        .fc-event { 
+            cursor: pointer; 
+            padding: 6px 10px; 
+            font-size: 0.95em; 
+            font-weight: bold; 
+            border-radius: 6px !important; /* This is the main control for rounding */
+            border: none; /* Often looks cleaner without the border when rounding */
+        }
+
+        /* This specifically ensures the rounded corner appears at the *start* of the bar */
+        .fc-daygrid-event-h-harness {
+            border-radius: 6px !important;
+        }
     </style>
+
 </head>
 <body>
 
