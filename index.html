@@ -10,57 +10,52 @@
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
         #calendar { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
-        /* 1. Base style for ALL booking bars */
+        /* 1. Make the raw FullCalendar event container completely invisible */
         .fc-event { 
-            cursor: pointer; 
-            padding: 6px 0px; 
-            font-size: 0.85em; 
-            font-weight: bold; 
-            background-color: #34495e !important; /* Default solid slate blue for middle stay days */
+            background: transparent !important;
             border: none !important;
-            color: #ffffff !important;
-            text-align: center;
-            border-radius: 0px !important; 
+            box-shadow: none !important;
             margin-top: 4px;
             margin-bottom: 4px;
         }
 
-        /* 2. TRUE ARRIVAL DAY: Left half transparent, right half pill-shaped blue */
-        .fc-event-start:not(.fc-event-not-start) {
-            background: linear-gradient(to right, transparent 50%, #34495e 50%) !important;
-            border-top-left-radius: 50px !important;
-            border-bottom-left-radius: 50px !important;
+        /* 2. Build a custom capsule inside the event bar that handles the visual display */
+        .fc-event::before {
+            content: '';
+            display: block;
+            height: 18px; /* Height of the visual bar */
+            background-color: #34495e; /* Elegant slate blue */
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
-        /* 3. TRUE CHECKOUT DAY: Left half pill-shaped blue, right half transparent */
-        .fc-event-end:not(.fc-event-not-end) {
-            background: linear-gradient(to right, #34495e 50%, transparent 50%) !important;
-            border-top-right-radius: 50px !important;
-            border-bottom-right-radius: 50px !important;
+        /* 3. TRUE CHECK-IN DAY: Round the left side and push it to the middle of the day */
+        .fc-event-start:not(.fc-event-not-start)::before {
+            left: 50%;
+            border-top-left-radius: 50px;
+            border-bottom-left-radius: 50px;
         }
 
-        /* 4. SHORT STAY FIX: If a booking starts AND ends on the exact same single day,
-           center a small isolated pill in the middle of the box */
-        .fc-event-start:not(.fc-event-not-start).fc-event-end:not(.fc-event-not-end) {
-            background: linear-gradient(to right, transparent 25%, #34495e 25%, #34495e 75%, transparent 75%) !important;
-            border-radius: 50px !important;
+        /* 4. TRUE CHECKOUT DAY: Round the right side and pull it back to the middle of the day */
+        .fc-event-end:not(.fc-event-not-end)::before {
+            right: 50%;
+            border-top-right-radius: 50px;
+            border-bottom-right-radius: 50px;
         }
 
-        /* 5. CONTINUATION ROWS: If a multi-week stay breaks lines, force it to be 
-           perfectly flat, solid, and full-width on the split rows */
-        .fc-event-not-start {
-            background-color: #34495e !important;
-            border-radius: 0px !important;
-        }
-        
-        .fc-event-not-end {
-            background-color: #34495e !important;
-            border-radius: 0px !important;
+        /* 5. SHORT STAY FIX: If it starts and ends on the exact same single day,
+           center a small isolated pill right in the middle of that box */
+        .fc-event-start:not(.fc-event-not-start).fc-event-end:not(.fc-event-not-end)::before {
+            left: 25%;
+            right: 25%;
+            border-radius: 50px;
         }
 
-        /* Clean up internal wrapper constraints */
+        /* Clean up standard wrapper constraints */
         .fc-daygrid-event-h-harness {
-            border-radius: 0px !important;
             margin: 0 !important;
         }
     </style>
