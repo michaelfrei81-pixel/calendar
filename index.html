@@ -10,34 +10,34 @@
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
         #calendar { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
-        /* 1. Base style for ALL booking bars (The Middle/Cut sections) */
+        /* 1. Base style for ALL booking bars (Middle/Cut sections stay flat) */
         .fc-event { 
             cursor: pointer; 
             padding: 6px 10px; 
             font-size: 0.95em; 
             font-weight: bold; 
-            background-color: #34495e !important; /* Slate Blue for stay dates */
+            background-color: #34495e !important; /* Elegant slate blue for all bars */
             border: none !important;
             color: #ffffff !important;
             
-            /* Default to completely flat/straight edges for the "cut" sections */
+            /* Middle/Cut rows remain completely flat to show continuation */
             border-radius: 0px !important; 
-            margin-top: 2px;
-            margin-bottom: 2px;
+            margin-top: 3px;
+            margin-bottom: 3px;
         }
 
-        /* 2. Style applied ONLY to the actual start day grid box */
+        /* 2. Actual START day gets a smooth, half-circle left edge */
         .fc-event-start {
-            border-top-left-radius: 8px !important;
-            border-bottom-left-radius: 8px !important;
-            background-color: #2ecc71 !important; /* Green for arrival */
+            border-top-left-radius: 50px !important;
+            border-bottom-left-radius: 50px !important;
+            padding-left: 14px; /* Extra padding so text doesn't hit the curve */
         }
 
-        /* 3. Style applied ONLY to the actual checkout day grid box */
+        /* 3. Actual END (checkout) day gets a smooth, half-circle right edge */
         .fc-event-end {
-            border-top-right-radius: 8px !important;
-            border-bottom-right-radius: 8px !important;
-            background-color: #e74c3c !important; /* Red for turnover */
+            border-top-right-radius: 50px !important;
+            border-bottom-right-radius: 50px !important;
+            padding-right: 14px; /* Extra padding so text doesn't hit the curve */
         }
 
         /* Clean up FullCalendar's internal wrapper constraints */
