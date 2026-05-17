@@ -10,39 +10,41 @@
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
         #calendar { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
-        /* 1. Base style for ALL booking bars (Middle/Cut sections stay flat) */
+        /* 1. Base style for ALL booking bars */
         .fc-event { 
             cursor: pointer; 
-            padding: 6px 10px; 
-            font-size: 0.95em; 
+            padding: 6px 0px; /* Reset horizontal padding so text centers nicely */
+            font-size: 0.85em; 
             font-weight: bold; 
-            background-color: #34495e !important; /* Elegant slate blue for all bars */
+            background-color: #34495e !important; /* Slate blue */
             border: none !important;
             color: #ffffff !important;
+            text-align: center; /* Centers the text inside the floating bar */
             
-            /* Middle/Cut rows remain completely flat to show continuation */
+            /* Middle/Cut rows remain flat and full-width */
             border-radius: 0px !important; 
-            margin-top: 3px;
-            margin-bottom: 3px;
+            margin-top: 4px;
+            margin-bottom: 4px;
         }
 
-        /* 2. Actual START day gets a smooth, half-circle left edge */
+        /* 2. Push the START edge to the exact middle of the check-in day */
         .fc-event-start {
             border-top-left-radius: 50px !important;
             border-bottom-left-radius: 50px !important;
-            padding-left: 14px; /* Extra padding so text doesn't hit the curve */
+            margin-left: 50% !important; 
         }
 
-        /* 3. Actual END (checkout) day gets a smooth, half-circle right edge */
+        /* 3. Pull the END edge back to the exact middle of the checkout day */
         .fc-event-end {
             border-top-right-radius: 50px !important;
             border-bottom-right-radius: 50px !important;
-            padding-right: 14px; /* Extra padding so text doesn't hit the curve */
+            margin-right: 50% !important; 
         }
 
-        /* Clean up FullCalendar's internal wrapper constraints */
+        /* CRITICAL: Allows the event bars to break outside standard cell restrictions */
         .fc-daygrid-event-h-harness {
             border-radius: 0px !important;
+            margin: 0 !important;
         }
     </style>
 
