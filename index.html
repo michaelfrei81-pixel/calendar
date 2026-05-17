@@ -52,24 +52,26 @@
                             var events = vevents.map(vevent => {
                                 var event = new ICAL.Event(vevent);
                                 
-                                // Convert to pure local JS dates to avoid string formatting bugs
                                 var startDate = event.startDate.toJSDate();
                                 var endDate = event.endDate.toJSDate();
                                 
-                                // Keep our visual correction so the bar spans fully through checkout day
+                                // Push visual grid end date forward by 1 day so the bar spans fully through checkout day
                                 var visualEndDate = new Date(endDate);
                                 visualEndDate.setDate(visualEndDate.getDate() + 1);
+                                
+                                // Strip out times to create clean YYYY-MM-DD strings for strict matching
+                                var trueStartStr = startDate.toISOString().split('T')[0];
+                                var trueEndStr = endDate.toISOString().split('T')[0];
                                 
                                 return {
                                     start: startDate,
                                     end: visualEndDate, 
-                                    backgroundColor: '#34495e', // Slate grey/blue for standard reservation days
+                                    backgroundColor: '#34495e', 
                                     borderColor: '#2c3e50',
                                     textColor: '#ffffff',
-                                    // Store local date strings for robust matching in the renderer
                                     extendedProps: {
-                                        trueMatchStart: startDate.toDateString(),
-                                        trueMatchEnd: endDate.toDateString()
+                                        trueStartStr: trueStartStr,
+                                        trueEndStr: trueEndStr
                                     }
                                 };
                             });
@@ -82,12 +84,15 @@
                         });
                 },
                 
-                // FIXED RENDERER: Uses reliable native date strings for matching
+                // FIXED SEGMENT RENDERER: Matches strictly against calendar day cell, ignoring row breaks
                 eventContent: function(arg) {
-                    var cellDateStr = arg.event.start.toDateString();
+                    // Extract the precise YYYY-MM-DD string for the specific cell day being rendered
+                    // We adjust for timezone offset to ensure standard matching
+                    var localDate = new Date(arg.event.start.getTime() - (arg.event.start.getTimezoneOffset() * 60000));
+                    var cellDateStr = localDate.toISOString().split('T')[0];
                     
-                    var trueStart = arg.event.extendedProps.trueMatchStart;
-                    var trueEnd = arg.event.extendedProps.trueMatchEnd;
+                    var trueStart = arg.event.extendedProps.trueStartStr;
+                    var trueEnd = arg.event.extendedProps.trueEndStr;
                     
                     var container = document.createElement('div');
                     container.style.display = 'flex';
@@ -97,32 +102,35 @@
                     container.style.padding = '2px 4px';
                     
                     var labelText = document.createElement('span');
-                    labelText.innerText = '🏨 OCCUPIED'; // Continuous stay label
+                    labelText.innerText = '🏨 OCCUPIED'; 
                     labelText.style.fontSize = '0.85em';
                     container.appendChild(labelText);
 
-                    // 1. Precise Check-In/Arrival Match
+                    // 1. Check if this specific day is the actual arrival day
                     if (cellDateStr === trueStart) {
                         var inBadge = document.createElement('span');
                         inBadge.innerText = '🛫 ARRIVAL';
-                        inBadge.style.backgroundColor = '#2ecc71'; // Vibrant Green
+                        inBadge.style.backgroundColor = '#2ecc71'; 
                         inBadge.style.padding = '2px 6px';
                         inBadge.style.borderRadius = '4px';
                         inBadge.style.fontSize = '0.8em';
                         labelText.innerText = ''; 
                         container.appendChild(inBadge);
                     } 
-                    
-                    // 2. Precise Check-Out/Turnover Match
-                    if (cellDateStr === trueEnd) {
+                    // 2. Check if this specific day is the actual checkout day
+                    else if (cellDateStr === trueEnd) {
                         var outBadge = document.createElement('span');
                         outBadge.innerText = '🧹 CLEAN';
-                        outBadge.style.backgroundColor = '#e74c3c'; // Vibrant Red
+                        outBadge.style.backgroundColor = '#e74c3c'; 
                         outBadge.style.padding = '2px 6px';
                         outBadge.style.borderRadius = '4px';
                         outBadge.style.fontSize = '0.8em';
                         labelText.innerText = ''; 
                         container.appendChild(outBadge);
+                    }
+                    // 3. Middle day or row split filler
+                    else {
+                        labelText.innerText = '🏨 OCCUPIED';
                     }
 
                     return { domNodes: [container] };
@@ -132,7 +140,6 @@
             calendar.render();
         });
     </script>
-
 
 </body>
 </html>
