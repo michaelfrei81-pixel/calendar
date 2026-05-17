@@ -6,68 +6,50 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.min.js"></script>
     
-              <style>
+    <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
         #calendar { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
-        /* 1. Make the raw FullCalendar event container completely invisible */
+        /* 1. Base style for ALL booking bars (Middle/Cut rows remain flat) */
         .fc-event { 
-            background: transparent !important;
+            cursor: pointer; 
+            padding: 6px 10px; 
+            font-size: 0.95em; 
+            font-weight: bold; 
+            background-color: #34495e !important; /* Elegant slate blue */
             border: none !important;
-            box-shadow: none !important;
-            margin-top: 4px;
-            margin-bottom: 4px;
+            color: #ffffff !important;
+            
+            /* Reset to flat edges for row breaks */
+            border-radius: 0px !important; 
+            margin-top: 3px;
+            margin-bottom: 3px;
         }
 
-        /* 2. Build a custom capsule inside the event bar that handles the visual display */
-        .fc-event::before {
-            content: '';
-            display: block;
-            height: 18px; /* Height of the visual bar */
-            background-color: #34495e; /* Elegant slate blue */
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
+        /* 2. Round the absolute START day left edge */
+        .fc-event-start {
+            border-top-left-radius: 6px !important;
+            border-bottom-left-radius: 6px !important;
         }
 
-        /* 3. TRUE CHECK-IN DAY: Round the left side and push it to the middle of the day */
-        .fc-event-start:not(.fc-event-not-start)::before {
-            left: 50%;
-            border-top-left-radius: 50px;
-            border-bottom-left-radius: 50px;
+        /* 3. Round the absolute END day right edge */
+        .fc-event-end {
+            border-top-right-radius: 6px !important;
+            border-bottom-right-radius: 6px !important;
         }
 
-        /* 4. TRUE CHECKOUT DAY: Round the right side and pull it back to the middle of the day */
-        .fc-event-end:not(.fc-event-not-end)::before {
-            right: 50%;
-            border-top-right-radius: 50px;
-            border-bottom-right-radius: 50px;
-        }
-
-        /* 5. SHORT STAY FIX: If it starts and ends on the exact same single day,
-           center a small isolated pill right in the middle of that box */
-        .fc-event-start:not(.fc-event-not-start).fc-event-end:not(.fc-event-not-end)::before {
-            left: 25%;
-            right: 25%;
-            border-radius: 50px;
-        }
-
-        /* Clean up standard wrapper constraints */
+        /* Clean up FullCalendar's internal wrapper constraints */
         .fc-daygrid-event-h-harness {
-            margin: 0 !important;
+            border-radius: 0px !important;
         }
     </style>
-
-
 </head>
 <body>
 
-    <h2 style="text-align: center; color: #333;">Mid-Century Oasis with Pool</h2>
+    <h2 style="text-align: center; color: #333;">Property Turnover Schedule</h2>
     <div id='calendar'></div>
 
-           <script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
 
@@ -75,6 +57,7 @@
                 initialView: 'dayGridMonth',
                 displayEventTime: false, 
                 events: function(info, successCallback, failureCallback) {
+                    // Put your actual Lodgify URL here inside the single quotes:
                     var rawUrl = 'https://www.lodgify.com/35689b4e-016b-4ed7-8c67-cec74e5f1dd6.ics'; 
                     var lodgifyIcalUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
                     
@@ -87,15 +70,25 @@
                             
                             var events = vevents.map(vevent => {
                                 var event = new ICAL.Event(vevent);
-                                var startDate = event.startDate.toJSDate();
-                                var endDate = event.endDate.toJSDate();
                                 
-                                // Keep our visual correction so the bar completely fills the checkout day
+                                // Clean timezone-locked date generation
+                                var startYear = event.startDate.year;
+                                var startMonth = event.startDate.month - 1; 
+                                var startDay = event.startDate.day;
+                                
+                                var endYear = event.endDate.year;
+                                var endMonth = event.endDate.month - 1;
+                                var endDay = event.endDate.day;
+                                
+                                var startDate = new Date(startYear, startMonth, startDay);
+                                var endDate = new Date(endYear, endMonth, endDay);
+                                
+                                // Visual correction so it highlights the entire checkout day
                                 var visualEndDate = new Date(endDate);
                                 visualEndDate.setDate(visualEndDate.getDate() + 1);
                                 
                                 return {
-                                    title: '',
+                                    title: '🧹 TURNOVER',
                                     start: startDate,
                                     end: visualEndDate
                                 };
@@ -113,6 +106,5 @@
             calendar.render();
         });
     </script>
-
 </body>
 </html>
