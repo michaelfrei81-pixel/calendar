@@ -65,59 +65,77 @@
                 displayEventTime: false, 
                 locale: 'es',
                 events: function(info, successCallback, failureCallback) {
-                    var rawUrl = 'https://www.lodgify.com/35689b4e-016b-4ed7-8c67-cec74e5f1dd6.ics'; 
+                    var rawUrl = 'https://www.lodgify.com/35689b4e-016b-4ed7-8c67-cec74e5f1dd6.ics';
                     
-                    // Uses api.allorigins.win raw proxy
-                    var lodgifyIcalUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl);
-                    
-                    fetch(lodgifyIcalUrl)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.text();
-                        })
-                        .then(data => {
-                            var jcalData = ICAL.parse(data);
-                            var comp = new ICAL.Component(jcalData);
-                            var vevents = comp.getAllSubcomponents('vevent');
-                            
-                            var events = vevents.map(vevent => {
-                                var event = new ICAL.Event(vevent);
+                    // List of CORS proxies to try in order
+                    var proxyList = [
+                        'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(rawUrl),
+                        'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl),
+                        'https://corsproxy.io/?' + encodeURIComponent(rawUrl)
+                    ];
+
+                    function fetchCalendar(proxyIndex) {
+                        if (proxyIndex >= proxyList.length) {
+                            console.error('All CORS proxies failed to load Lodgify feed.');
+                            failureCallback(new Error('All CORS proxies failed'));
+                            return;
+                        }
+
+                        fetch(proxyList[proxyIndex])
+                            .then(response => {
+                                if (!response.ok) throw new Error('HTTP ' + response.status);
+                                return response.text();
+                            })
+                            .then(data => {
+                                if (!data || !data.includes('BEGIN:VCALENDAR')) {
+                                    throw new Error('Invalid iCal data returned');
+                                }
+
+                                var jcalData = ICAL.parse(data);
+                                var comp = new ICAL.Component(jcalData);
+                                var vevents = comp.getAllSubcomponents('vevent');
                                 
-                                var startYear = event.startDate.year;
-                                var startMonth = event.startDate.month - 1; 
-                                var startDay = event.startDate.day;
+                                var events = vevents.map(vevent => {
+                                    var event = new ICAL.Event(vevent);
+                                    
+                                    var startYear = event.startDate.year;
+                                    var startMonth = event.startDate.month - 1; 
+                                    var startDay = event.startDate.day;
+                                    
+                                    var endYear = event.endDate.year;
+                                    var endMonth = event.endDate.month - 1;
+                                    var endDay = event.endDate.day;
+                                    
+                                    var startDate = new Date(startYear, startMonth, startDay);
+                                    var endDate = new Date(endYear, endMonth, endDay);
+                                    
+                                    var visualEndDate = new Date(endDate);
+                                    visualEndDate.setDate(visualEndDate.getDate() + 1);
+                                    
+                                    return {
+                                        title: '',
+                                        start: startDate,
+                                        end: visualEndDate
+                                    };
+                                });
                                 
-                                var endYear = event.endDate.year;
-                                var endMonth = event.endDate.month - 1;
-                                var endDay = event.endDate.day;
-                                
-                                var startDate = new Date(startYear, startMonth, startDay);
-                                var endDate = new Date(endYear, endMonth, endDay);
-                                
-                                var visualEndDate = new Date(endDate);
-                                visualEndDate.setDate(visualEndDate.getDate() + 1);
-                                
-                                return {
-                                    title: '',
-                                    start: startDate,
-                                    end: visualEndDate
-                                };
+                                successCallback(events);
+                            })
+                            .catch(err => {
+                                console.warn('Proxy ' + proxyIndex + ' failed, trying next...', err);
+                                fetchCalendar(proxyIndex + 1);
                             });
-                            
-                            successCallback(events);
-                        })
-                        .catch(error => {
-                            console.error('Error fetching calendar:', error);
-                            failureCallback(error);
-                        });
+                    }
+
+                    // Start fetching with the primary proxy
+                    fetchCalendar(0);
                 }
             });
 
             calendar.render();
         });
     </script>
+
 
 </body>
 </html>
