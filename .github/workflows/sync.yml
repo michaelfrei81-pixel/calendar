@@ -1,0 +1,27 @@
+name: Sync Lodgify Calendar
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Runs automatically every hour
+  workflow_dispatch: # Allows you to click "Run workflow" manually anytime
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Lodgify iCal
+        run: |
+          curl -s -L "https://www.lodgify.com/35689b4e-016b-4ed7-8c67-cec74e5f1dd6.ics" -o calendar.ics
+
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add calendar.ics
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-sync Lodgify calendar" && git push)
