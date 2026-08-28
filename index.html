@@ -60,6 +60,26 @@
             if (el) el.innerText = msg;
         }
 
+        // Helper function for CORS-free JSONP transport
+        function fetchJsonp(url, callbackName) {
+            return new Promise(function(resolve, reject) {
+                var script = document.createElement('script');
+                var cbName = callbackName || 'jsonp_cb_' + Date.now();
+                window[cbName] = function(data) {
+                    delete window[cbName];
+                    document.body.removeChild(script);
+                    resolve(data);
+                };
+                script.onerror = function(err) {
+                    delete window[cbName];
+                    if (script.parentNode) document.body.removeChild(script);
+                    reject(new Error('JSONP request failed'));
+                };
+                script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + cbName;
+                document.body.appendChild(script);
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
 
@@ -69,21 +89,19 @@
                 locale: 'es',
                 events: function(info, successCallback, failureCallback) {
                     var icalUrl = 'https://www.lodgify.com/35689b4e-016b-4ed7-8c67-cec74e5f1dd6.ics';
-                    
-                    // Uses JSON wrapper to guarantee bypass of CORS 'Failed to fetch' blocks
-                    var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(icalUrl) + '&disableCache=true';
+                    var jsonpProxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(icalUrl);
 
-                    logStatus('Conectando con el calendario...');
+                    logStatus('Descargando datos de Lodgify...');
 
-                    fetch(proxyUrl)
-                        .then(function(res) {
-                            if (!res.ok) throw new Error('Proxy status: ' + res.status);
-                            return res.json();
-                        })
-                        .then(function(data) {
-                            var rawIcs = data.contents;
-                            if (!rawIcs || rawIcs.indexOf('BEGIN:VCALENDAR') === -1) {
-                                throw new Error('Feed inválido recibido.');
+                    fetchJsonp(jsonpProxy)
+                        .then(function(response) {
+                            if (!response || !response.contents) {
+                                throw new Error('Contenido no recibido del proxy.');
+                            }
+
+                            var rawIcs = response.contents;
+                            if (rawIcs.indexOf('BEGIN:VCALENDAR') === -1) {
+                                throw new Error('El archivo recibido no es un iCal válido.');
                             }
 
                             var jcalData = ICAL.parse(rawIcs);
@@ -102,11 +120,11 @@
                                 };
                             });
 
-                            logStatus('Éxito: Se cargaron ' + events.length + ' reservas.');
+                            logStatus('Éxito: ' + events.length + ' reservas cargadas correctamente.');
                             successCallback(events);
                         })
                         .catch(function(err) {
-                            logStatus('Error al cargar: ' + err.message);
+                            logStatus('Error: ' + err.message);
                             failureCallback(err);
                         });
                 }
