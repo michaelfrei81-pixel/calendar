@@ -28,11 +28,21 @@
         }
 
         h2 {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             color: #2c3e50;
             margin: 6px 0 16px 0;
             font-size: 1.4rem;
             font-weight: 700;
+        }
+
+        .title-icon {
+            width: 22px;
+            height: 22px;
+            fill: #34495e;
+            display: inline-block;
         }
 
         /* Toolbar header & button styling */
@@ -49,7 +59,15 @@
             padding: 5px 12px !important;
         }
 
-        /* Adds a clean space between the < and > navigation buttons */
+        /* Capitalize day header abbreviations (Dom, Lun, Mar...) */
+        .fc-col-header-cell-cushion {
+            text-transform: capitalize !important;
+            text-decoration: none !important;
+            color: #2c3e50 !important;
+            font-weight: 700 !important;
+        }
+
+        /* Space between navigation buttons */
         .fc .fc-button-group {
             display: inline-flex !important;
             gap: 6px !important;
@@ -86,7 +104,7 @@
             margin-bottom: 3px !important;
         }
 
-        /* 1. Recessed check-in start (afternoon arrival) */
+        /* Recessed check-in start (afternoon arrival) */
         .fc-event-start {
             border-top-left-radius: 12px !important;
             border-bottom-left-radius: 12px !important;
@@ -94,7 +112,7 @@
             padding-left: 2px;
         }
 
-        /* 2. Recessed checkout end (morning departure) */
+        /* Recessed checkout end (morning departure) */
         .fc-event-end {
             border-top-right-radius: 12px !important;
             border-bottom-right-radius: 12px !important;
@@ -102,16 +120,17 @@
             padding-right: 2px;
         }
 
-        /* Clean up FullCalendar internal wrappers */
         .fc-daygrid-event-h-harness {
             border-radius: 0px !important;
             margin: 0 !important;
         }
 
-        /* Mobile specific adjustments */
+        /* Mobile adjustments */
         @media (max-width: 600px) {
             body { padding: 6px; }
             #calendar-card { padding: 10px; border-radius: 8px; }
+            h2 { font-size: 1.25rem; }
+            .title-icon { width: 19px; height: 19px; }
             .fc-daygrid-day-frame { min-height: 56px !important; }
             .fc .fc-toolbar-title { font-size: 1.1rem !important; }
             .fc-event { height: 16px !important; }
@@ -123,7 +142,12 @@
 <body>
 
     <div id="calendar-card">
-        <h2>Casa de Michael</h2>
+        <h2>
+            Casa de Michael
+            <svg class="title-icon" viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+        </h2>
         <div id="calendar"></div>
     </div>
 
@@ -154,7 +178,6 @@
                                 var sDate = new Date(ev.startDate.year, ev.startDate.month - 1, ev.startDate.day);
                                 var eDate = new Date(ev.endDate.year, ev.endDate.month - 1, ev.endDate.day);
                                 
-                                // Visual correction so checkout day is fully included in the bar
                                 var visualEndDate = new Date(eDate);
                                 visualEndDate.setDate(visualEndDate.getDate() + 1);
                                 
