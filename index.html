@@ -69,21 +69,24 @@
                 locale: 'es',
                 events: function(info, successCallback, failureCallback) {
                     var icalUrl = 'https://www.lodgify.com/35689b4e-016b-4ed7-8c67-cec74e5f1dd6.ics';
-                    var proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(icalUrl);
+                    
+                    // Uses JSON wrapper to guarantee bypass of CORS 'Failed to fetch' blocks
+                    var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(icalUrl) + '&disableCache=true';
 
-                    logStatus('Conectando a Lodgify vía proxy...');
+                    logStatus('Conectando con el calendario...');
 
                     fetch(proxyUrl)
                         .then(function(res) {
                             if (!res.ok) throw new Error('Proxy status: ' + res.status);
-                            return res.text();
+                            return res.json();
                         })
                         .then(function(data) {
-                            if (!data || data.indexOf('BEGIN:VCALENDAR') === -1) {
-                                throw new Error('Data received is not a valid iCal feed: ' + data.substring(0, 100));
+                            var rawIcs = data.contents;
+                            if (!rawIcs || rawIcs.indexOf('BEGIN:VCALENDAR') === -1) {
+                                throw new Error('Feed inválido recibido.');
                             }
 
-                            var jcalData = ICAL.parse(data);
+                            var jcalData = ICAL.parse(rawIcs);
                             var comp = new ICAL.Component(jcalData);
                             var vevents = comp.getAllSubcomponents('vevent');
                             
