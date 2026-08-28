@@ -49,7 +49,7 @@
             padding: 5px 12px !important;
         }
 
-        /* Add space between the < and > navigation buttons */
+        /* Adds a clean space between the < and > navigation buttons */
         .fc .fc-button-group {
             display: inline-flex !important;
             gap: 6px !important;
@@ -86,19 +86,19 @@
             margin-bottom: 3px !important;
         }
 
-        /* 1. Subtle recessed start (Check-in afternoon) */
+        /* 1. Recessed check-in start (afternoon arrival) */
         .fc-event-start {
             border-top-left-radius: 12px !important;
             border-bottom-left-radius: 12px !important;
-            margin-left: 15px !important;
+            margin-left: 18px !important;
             padding-left: 2px;
         }
 
-        /* 2. Subtle recessed end (Checkout morning) */
+        /* 2. Recessed checkout end (morning departure) */
         .fc-event-end {
             border-top-right-radius: 12px !important;
             border-bottom-right-radius: 12px !important;
-            margin-right: 15px !important;
+            margin-right: 18px !important;
             padding-right: 2px;
         }
 
@@ -115,8 +115,8 @@
             .fc-daygrid-day-frame { min-height: 56px !important; }
             .fc .fc-toolbar-title { font-size: 1.1rem !important; }
             .fc-event { height: 16px !important; }
-            .fc-event-start { margin-left: 10px !important; border-top-left-radius: 10px !important; border-bottom-left-radius: 10px !important; }
-            .fc-event-end { margin-right: 10px !important; border-top-right-radius: 10px !important; border-bottom-right-radius: 10px !important; }
+            .fc-event-start { margin-left: 12px !important; border-top-left-radius: 10px !important; border-bottom-left-radius: 10px !important; }
+            .fc-event-end { margin-right: 12px !important; border-top-right-radius: 10px !important; border-bottom-right-radius: 10px !important; }
         }
     </style>
 </head>
@@ -154,10 +154,14 @@
                                 var sDate = new Date(ev.startDate.year, ev.startDate.month - 1, ev.startDate.day);
                                 var eDate = new Date(ev.endDate.year, ev.endDate.month - 1, ev.endDate.day);
                                 
+                                // Visual correction so checkout day is fully included in the bar
+                                var visualEndDate = new Date(eDate);
+                                visualEndDate.setDate(visualEndDate.getDate() + 1);
+                                
                                 return {
                                     title: '',
                                     start: sDate,
-                                    end: eDate
+                                    end: visualEndDate
                                 };
                             });
 
