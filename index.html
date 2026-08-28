@@ -12,7 +12,7 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 10px; background-color: #f4f7f6; }
         #calendar { max-width: 900px; margin: 0 auto; background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        #debug-log { max-width: 900px; margin: 15px auto; padding: 10px; font-size: 12px; background: #eee; border-radius: 5px; color: #333; word-break: break-all; }
+        #debug-log { max-width: 900px; margin: 15px auto; padding: 10px; font-size: 13px; background: #eee; border-radius: 5px; color: #333; word-break: break-all; text-align: center; }
         
         .fc-event { 
             cursor: pointer; 
@@ -52,32 +52,12 @@
 
     <h2 style="text-align: center; color: #333; margin-bottom: 15px;">Casa de Michael</h2>
     <div id="calendar"></div>
-    <div id="debug-log">Cargando reservas...</div>
+    <div id="debug-log">Conectando con el calendario...</div>
 
     <script>
-        function logStatus(msg) {
+        function updateStatus(text) {
             var el = document.getElementById('debug-log');
-            if (el) el.innerText = msg;
-        }
-
-        // Helper function for CORS-free JSONP transport
-        function fetchJsonp(url, callbackName) {
-            return new Promise(function(resolve, reject) {
-                var script = document.createElement('script');
-                var cbName = callbackName || 'jsonp_cb_' + Date.now();
-                window[cbName] = function(data) {
-                    delete window[cbName];
-                    document.body.removeChild(script);
-                    resolve(data);
-                };
-                script.onerror = function(err) {
-                    delete window[cbName];
-                    if (script.parentNode) document.body.removeChild(script);
-                    reject(new Error('JSONP request failed'));
-                };
-                script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + cbName;
-                document.body.appendChild(script);
-            });
+            if (el) el.innerText = text;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -88,45 +68,59 @@
                 displayEventTime: false, 
                 locale: 'es',
                 events: function(info, successCallback, failureCallback) {
-                    var icalUrl = 'https://www.lodgify.com/35689b4e-016b-4ed7-8c67-cec74e5f1dd6.ics';
-                    var jsonpProxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(icalUrl);
+                    var rawUrl = 'https://www.lodgify.com/35689b4e-016b-4ed7-8c67-cec74e5f1dd6.ics';
+                    
+                    // Direct CORS proxies in prioritized order
+                    var endpoints = [
+                        'https://corsproxy.io/?url=' + encodeURIComponent(rawUrl),
+                        'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(rawUrl),
+                        'https://thingproxy.freeboard.io/fetch/' + rawUrl
+                    ];
 
-                    logStatus('Descargando datos de Lodgify...');
+                    function tryFetch(index) {
+                        if (index >= endpoints.length) {
+                            updateStatus('Error: No se pudo conectar a los servidores de sincronización.');
+                            failureCallback(new Error('All proxies failed'));
+                            return;
+                        }
 
-                    fetchJsonp(jsonpProxy)
-                        .then(function(response) {
-                            if (!response || !response.contents) {
-                                throw new Error('Contenido no recibido del proxy.');
-                            }
+                        updateStatus('Cargando reservas (intento ' + (index + 1) + ')...');
 
-                            var rawIcs = response.contents;
-                            if (rawIcs.indexOf('BEGIN:VCALENDAR') === -1) {
-                                throw new Error('El archivo recibido no es un iCal válido.');
-                            }
+                        fetch(endpoints[index])
+                            .then(function(res) {
+                                if (!res.ok) throw new Error('HTTP ' + res.status);
+                                return res.text();
+                            })
+                            .then(function(rawIcs) {
+                                if (!rawIcs || rawIcs.indexOf('BEGIN:VCALENDAR') === -1) {
+                                    throw new Error('Respuesta inválida');
+                                }
 
-                            var jcalData = ICAL.parse(rawIcs);
-                            var comp = new ICAL.Component(jcalData);
-                            var vevents = comp.getAllSubcomponents('vevent');
-                            
-                            var events = vevents.map(function(vevent) {
-                                var ev = new ICAL.Event(vevent);
-                                var sDate = new Date(ev.startDate.year, ev.startDate.month - 1, ev.startDate.day);
-                                var eDate = new Date(ev.endDate.year, ev.endDate.month - 1, ev.endDate.day + 1);
+                                var jcalData = ICAL.parse(rawIcs);
+                                var comp = new ICAL.Component(jcalData);
+                                var vevents = comp.getAllSubcomponents('vevent');
                                 
-                                return {
-                                    title: '',
-                                    start: sDate,
-                                    end: eDate
-                                };
-                            });
+                                var events = vevents.map(function(vevent) {
+                                    var ev = new ICAL.Event(vevent);
+                                    var sDate = new Date(ev.startDate.year, ev.startDate.month - 1, ev.startDate.day);
+                                    var eDate = new Date(ev.endDate.year, ev.endDate.month - 1, ev.endDate.day + 1);
+                                    
+                                    return {
+                                        title: '',
+                                        start: sDate,
+                                        end: eDate
+                                    };
+                                });
 
-                            logStatus('Éxito: ' + events.length + ' reservas cargadas correctamente.');
-                            successCallback(events);
-                        })
-                        .catch(function(err) {
-                            logStatus('Error: ' + err.message);
-                            failureCallback(err);
-                        });
+                                updateStatus('Listo: Se cargaron ' + events.length + ' reservas.');
+                                successCallback(events);
+                            })
+                            .catch(function(err) {
+                                tryFetch(index + 1);
+                            });
+                    }
+
+                    tryFetch(0);
                 }
             });
 
