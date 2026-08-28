@@ -49,7 +49,7 @@
         }
 
         .fc-daygrid-day-frame {
-            min-height: 70px !important;
+            min-height: 65px !important;
         }
 
         .fc-daygrid-day-top {
@@ -58,7 +58,7 @@
             padding: 4px 6px !important;
         }
 
-        /* Base event styling */
+        /* 1. Base style for all booking bars */
         .fc-event { 
             cursor: pointer; 
             height: 18px !important;
@@ -73,20 +73,21 @@
             margin-bottom: 2px !important;
         }
 
-        /* 1. Start Day: bar starts at 50% width of the square */
+        /* 2. Check-in Day: starts at the middle (afternoon arrival) */
         .fc-event-start {
             border-top-left-radius: 9px !important;
             border-bottom-left-radius: 9px !important;
             margin-left: 50% !important;
         }
 
-        /* 2. End Day: bar cuts off at 50% width of the square */
+        /* 3. Checkout Day: ends at the middle (morning departure) */
         .fc-event-end {
             border-top-right-radius: 9px !important;
             border-bottom-right-radius: 9px !important;
             margin-right: 50% !important;
         }
 
+        /* Clean up FullCalendar internal wrappers */
         .fc-daygrid-event-h-harness {
             border-radius: 0px !important;
             margin: 0 !important;
@@ -95,9 +96,9 @@
         @media (max-width: 600px) {
             body { padding: 6px; }
             #calendar-card { padding: 10px; border-radius: 8px; }
-            .fc-daygrid-day-frame { min-height: 58px !important; }
+            .fc-daygrid-day-frame { min-height: 55px !important; }
             .fc .fc-toolbar-title { font-size: 1.1rem !important; }
-            .fc-event { height: 15px !important; }
+            .fc-event { height: 16px !important; }
             .fc-event-start { border-top-left-radius: 8px !important; border-bottom-left-radius: 8px !important; }
             .fc-event-end { border-top-right-radius: 8px !important; border-bottom-right-radius: 8px !important; }
         }
@@ -137,10 +138,14 @@
                                 var sDate = new Date(ev.startDate.year, ev.startDate.month - 1, ev.startDate.day);
                                 var eDate = new Date(ev.endDate.year, ev.endDate.month - 1, ev.endDate.day);
                                 
+                                // Extend by 1 day so FullCalendar renders the checkout date as the event-end
+                                var visualEndDate = new Date(eDate);
+                                visualEndDate.setDate(visualEndDate.getDate() + 1);
+                                
                                 return {
                                     title: '',
                                     start: sDate,
-                                    end: eDate
+                                    end: visualEndDate
                                 };
                             });
 
