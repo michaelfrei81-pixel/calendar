@@ -35,7 +35,6 @@
             font-weight: 700;
         }
 
-        /* Toolbar header styling */
         .fc .fc-toolbar-title {
             font-size: 1.25rem !important;
             text-transform: capitalize;
@@ -49,7 +48,6 @@
             padding: 4px 10px !important;
         }
 
-        /* Day grid cell sizing */
         .fc-daygrid-day-frame {
             min-height: 70px !important;
         }
@@ -60,7 +58,7 @@
             padding: 4px 6px !important;
         }
 
-        /* Booking bar base styling */
+        /* Base event styling */
         .fc-event { 
             cursor: pointer; 
             height: 18px !important;
@@ -75,17 +73,18 @@
             margin-bottom: 2px !important;
         }
 
-        /* Rounded check-in / check-out visual caps */
+        /* 1. Start Day: bar starts at 50% width of the square */
         .fc-event-start {
-            border-top-left-radius: 12px !important;
-            border-bottom-left-radius: 12px !important;
-            margin-left: 12px !important;
+            border-top-left-radius: 9px !important;
+            border-bottom-left-radius: 9px !important;
+            margin-left: 50% !important;
         }
 
+        /* 2. End Day: bar cuts off at 50% width of the square */
         .fc-event-end {
-            border-top-right-radius: 12px !important;
-            border-bottom-right-radius: 12px !important;
-            margin-right: 12px !important;
+            border-top-right-radius: 9px !important;
+            border-bottom-right-radius: 9px !important;
+            margin-right: 50% !important;
         }
 
         .fc-daygrid-event-h-harness {
@@ -93,15 +92,14 @@
             margin: 0 !important;
         }
 
-        /* Mobile specific adjustments */
         @media (max-width: 600px) {
             body { padding: 6px; }
             #calendar-card { padding: 10px; border-radius: 8px; }
             .fc-daygrid-day-frame { min-height: 58px !important; }
             .fc .fc-toolbar-title { font-size: 1.1rem !important; }
-            .fc-event { height: 16px !important; }
-            .fc-event-start { margin-left: 8px !important; border-top-left-radius: 10px !important; border-bottom-left-radius: 10px !important; }
-            .fc-event-end { margin-right: 8px !important; border-top-right-radius: 10px !important; border-bottom-right-radius: 10px !important; }
+            .fc-event { height: 15px !important; }
+            .fc-event-start { border-top-left-radius: 8px !important; border-bottom-left-radius: 8px !important; }
+            .fc-event-end { border-top-right-radius: 8px !important; border-bottom-right-radius: 8px !important; }
         }
     </style>
 </head>
@@ -123,7 +121,6 @@
                 height: 'auto',
                 contentHeight: 'auto',
                 aspectRatio: 1.1,
-                dayMaxEventRows: 2,
                 events: function(info, successCallback, failureCallback) {
                     fetch('./calendar.ics?t=' + new Date().getTime())
                         .then(function(res) {
@@ -138,7 +135,7 @@
                             var events = vevents.map(function(vevent) {
                                 var ev = new ICAL.Event(vevent);
                                 var sDate = new Date(ev.startDate.year, ev.startDate.month - 1, ev.startDate.day);
-                                var eDate = new Date(ev.endDate.year, ev.endDate.month - 1, ev.endDate.day + 1);
+                                var eDate = new Date(ev.endDate.year, ev.endDate.month - 1, ev.endDate.day);
                                 
                                 return {
                                     title: '',
