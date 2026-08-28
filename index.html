@@ -48,7 +48,7 @@
         /* Toolbar header & button styling */
         .fc .fc-toolbar-title {
             font-size: 1.25rem !important;
-            text-transform: capitalize;
+            text-transform: none !important; /* Retains natural Spanish title capitalization */
             color: #2c3e50;
         }
 
@@ -159,6 +159,13 @@
                 initialView: 'dayGridMonth',
                 displayEventTime: false, 
                 locale: 'es',
+                titleFormat: function(date) {
+                    var months = [
+                        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                    ];
+                    return months[date.date.month] + ' de ' + date.date.year;
+                },
                 height: 'auto',
                 contentHeight: 'auto',
                 aspectRatio: 1.1,
